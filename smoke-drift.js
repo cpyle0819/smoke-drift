@@ -132,9 +132,9 @@ const FILTER_SVG = `
   <svg width="0" height="0" aria-hidden="true" style="position:absolute">
     <defs>
       <filter id="puffTex" x="-120%" y="-120%" width="340%" height="340%">
-        <feGaussianBlur in="SourceGraphic" stdDeviation="7" result="b"/>
-        <feTurbulence type="fractalNoise" baseFrequency="0.012 0.026" numOctaves="3" seed="7" result="n"/>
-        <feDisplacementMap in="b" in2="n" scale="78" xChannelSelector="R" yChannelSelector="G"/>
+        <feGaussianBlur in="SourceGraphic" stdDeviation="9" result="b"/>
+        <feTurbulence type="fractalNoise" baseFrequency="0.007 0.015" numOctaves="1" seed="7" result="n"/>
+        <feDisplacementMap in="b" in2="n" scale="66" xChannelSelector="R" yChannelSelector="G"/>
       </filter>
     </defs>
   </svg>
@@ -220,7 +220,7 @@ class SmokeDrift extends HTMLElement {
     const puff = document.createElement('div');
     puff.className = 'puff';
 
-    const w = rand(34, 58);
+    const w = rand(52, 84);   // wider base — a broader wisp from the start
     const h = rand(170, 260);
     const life = rand(this.lifeMin, this.lifeMax);
     const climb = rand(54, 84);                 // vh risen over its life
