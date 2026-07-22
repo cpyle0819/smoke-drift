@@ -25,7 +25,7 @@
 </head>
 <body>
   <!-- default: fixed, full-viewport, behind everything -->
-  <smoke-drift id="smoke" color="rgb(232 222 196)" opacity="0.5" wind="300"></smoke-drift>
+  <smoke-drift id="smoke" color="rgb(232 222 196)" opacity="0.5" wind="300" fire></smoke-drift>
 
   <div class="card">
     <h1>&lt;smoke-drift&gt;</h1>
@@ -39,6 +39,7 @@
       <button onclick="smoke.color = '#9fd1ff'">blue smoke</button>
       <button onclick="smoke.wind = -smoke.wind">reverse wind</button>
       <button onclick="smoke.setAttribute('gap-min','0'); smoke.setAttribute('gap-max','2')">more smoke</button>
+      <button onclick="smoke.fire = !smoke.fire">toggle fire</button>
     </div>
   </div>
 </body>

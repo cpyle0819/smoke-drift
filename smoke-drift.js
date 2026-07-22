@@ -24,6 +24,8 @@
  *   life-max      longest wisp lifetime, seconds    (default: 26)
  *   gap-min       shortest empty gap after a wisp, seconds (default: 1)
  *   gap-max       longest empty gap after a wisp, seconds  (default: 10)
+ *   fire          boolean attr; a glowing ember "draw" precedes each wisp
+ *   fire-color    CSS color of the ember glow        (default: rgb(255 106 20))
  *   paused        boolean attr; presence pauses spawning
  *
  * Respects prefers-reduced-motion (renders nothing when the user opts out).
@@ -31,6 +33,7 @@
 
 const DEFAULTS = {
   color: 'rgb(232 222 196)',
+  fireColor: 'rgb(255 106 20)',
   opacity: 0.5,
   wind: 300,
   spread: 0.6,
@@ -80,7 +83,7 @@ const STYLES = `
   }
   @keyframes puff-fade {
     0%   { opacity: 0; }
-    14%  { opacity: var(--peak, .5); }
+    8%   { opacity: var(--peak, .5); }
     55%  { opacity: calc(var(--peak, .5) * .7); }
     100% { opacity: 0; }
   }
@@ -113,6 +116,55 @@ const STYLES = `
       transparent 74%);
     border-radius: 50%;
   }
+  /* The ember "draw": a warm glow whose center sits well below the bottom edge
+     (only its top third peeks in) that swells and fades like a pull on a pipe,
+     right where the wisp is about to rise. */
+  .ember {
+    position: absolute;
+    left: calc(50% - (var(--ew, 560px) / 2) + var(--jit, 0px));
+    bottom: calc(var(--ew, 560px) / -1.5);   /* center 2/3 offscreen -> top 1/3 visible */
+    width: var(--ew, 560px); height: var(--ew, 560px);
+    opacity: 0;
+    background: radial-gradient(50% 50% at 50% 50%,
+      color-mix(in srgb, var(--fire-color) 95%, transparent),
+      color-mix(in srgb, var(--fire-color) 45%, transparent) 28%,
+      transparent 54%);
+    filter: blur(10px);
+    mix-blend-mode: screen;
+    will-change: opacity, scale;
+    animation: ember-glow var(--draw, 5.5s) ease-in-out forwards;
+  }
+  /* Slow ramp to full, then a quick dim — a draw on the pipe. */
+  @keyframes ember-glow {
+    0%   { opacity: 0;                 scale: .85; }
+    78%  { opacity: var(--glow, .85);  scale: 1.12; }
+    100% { opacity: 0;                 scale: 1.18; }
+  }
+
+  /* Ambient wash: a much larger, softer circle sharing the ember's center — a
+     faint halo that lifts the surroundings with the draw. Less pronounced than
+     the ember; concentric with it (see #drawFire for the shared-center math). */
+  .ambient {
+    position: absolute;
+    left: calc(50% - (var(--aw, 1500px) / 2) + var(--jit, 0px));
+    bottom: calc((var(--ew, 560px) / -6) - (var(--aw, 1500px) / 2));
+    width: var(--aw, 1500px); height: var(--aw, 1500px);
+    opacity: 0;
+    background: radial-gradient(50% 50% at 50% 50%,
+      color-mix(in srgb, var(--fire-color) 55%, transparent),
+      color-mix(in srgb, var(--fire-color) 22%, transparent) 30%,
+      transparent 60%);
+    filter: blur(20px);
+    mix-blend-mode: screen;
+    will-change: opacity;
+    animation: ambient-glow var(--draw, 5.5s) ease-in-out forwards;
+  }
+  @keyframes ambient-glow {
+    0%   { opacity: 0; }
+    78%  { opacity: var(--ambient, .3); }
+    100% { opacity: 0; }
+  }
+
   @keyframes overtake { to { translate: 0 var(--rise, -40%); } }
   @keyframes wobble {
     0%,100% { rotate: 0deg; }
@@ -142,8 +194,8 @@ const FILTER_SVG = `
 
 class SmokeDrift extends HTMLElement {
   static observedAttributes = [
-    'color', 'opacity', 'wind', 'spread',
-    'life-min', 'life-max', 'gap-min', 'gap-max', 'paused',
+    'color', 'fire-color', 'opacity', 'wind', 'spread',
+    'life-min', 'life-max', 'gap-min', 'gap-max', 'fire', 'paused',
   ];
 
   #stage;
@@ -172,6 +224,8 @@ class SmokeDrift extends HTMLElement {
   }
   get color()   { return this.getAttribute('color') || DEFAULTS.color; }
   set color(v)  { v == null ? this.removeAttribute('color') : this.setAttribute('color', v); }
+  get fireColor()  { return this.getAttribute('fire-color') || DEFAULTS.fireColor; }
+  set fireColor(v) { v == null ? this.removeAttribute('fire-color') : this.setAttribute('fire-color', v); }
   get opacity() { return this.#num('opacity', DEFAULTS.opacity); }
   set opacity(v){ this.setAttribute('opacity', v); }
   get wind()    { return this.#num('wind', DEFAULTS.wind); }
@@ -182,11 +236,14 @@ class SmokeDrift extends HTMLElement {
   get lifeMax() { return this.#num('life-max', DEFAULTS.lifeMax); }
   get gapMin()  { return this.#num('gap-min', DEFAULTS.gapMin); }
   get gapMax()  { return this.#num('gap-max', DEFAULTS.gapMax); }
+  get fire()    { return this.hasAttribute('fire'); }
+  set fire(v)   { v ? this.setAttribute('fire', '') : this.removeAttribute('fire'); }
   get paused()  { return this.hasAttribute('paused'); }
   set paused(v) { v ? this.setAttribute('paused', '') : this.removeAttribute('paused'); }
 
   connectedCallback() {
     this.style.setProperty('--smoke-color', this.color);
+    this.style.setProperty('--fire-color', this.fireColor);
     this.#reduceMotion?.addEventListener?.('change', this.#onMotionPref);
     this.#start();
   }
@@ -196,6 +253,7 @@ class SmokeDrift extends HTMLElement {
   }
   attributeChangedCallback(name) {
     if (name === 'color') this.style.setProperty('--smoke-color', this.color);
+    if (name === 'fire-color') this.style.setProperty('--fire-color', this.fireColor);
     if (name === 'paused') this.paused ? this.#stop() : this.#start();
     // other attrs apply to the NEXT spawned wisp; live wisps finish as-is.
   }
@@ -214,8 +272,50 @@ class SmokeDrift extends HTMLElement {
     this.#stage.replaceChildren();
   }
 
-  // Build and launch one wisp: a main ribbon + 2–3 satellite clouds, grouped.
+  // One cycle: pick where the wisp originates, then — if fire is on — play the
+  // ember "draw" there first and launch the wisp only once the glow has faded;
+  // otherwise launch the wisp straight away.
   #spawn() {
+    if (!this.#running) return;
+    const jit = rand(-this.spread, this.spread) * window.innerWidth;
+    if (this.fire) this.#drawFire(jit, () => this.#launchWisp(jit));
+    else this.#launchWisp(jit);
+  }
+
+  // The ember: a warm glow, center just off the bottom edge, that swells and
+  // fades like a pull on a pipe. When it ends we clear it and run `then` (which
+  // launches the wisp) so smoke only appears after the fire dies down.
+  #drawFire(jit, then) {
+    const draw = rand(5, 6.5);
+    const base = Math.max(0, Math.min(1, this.opacity));
+
+    const ew = rand(480, 640);
+
+    const ambient = document.createElement('div');
+    ambient.className = 'ambient';
+    ambient.style.setProperty('--jit', `${jit}px`);
+    ambient.style.setProperty('--ew', `${ew}px`);
+    ambient.style.setProperty('--aw', `${ew * rand(2.6, 3.2)}px`);
+    ambient.style.setProperty('--draw', `${draw}s`);
+    ambient.style.setProperty('--ambient', base * rand(0.28, 0.42));
+
+    const ember = document.createElement('div');
+    ember.className = 'ember';
+    ember.style.setProperty('--jit', `${jit}px`);
+    ember.style.setProperty('--ew', `${ew}px`);
+    ember.style.setProperty('--draw', `${draw}s`);
+    ember.style.setProperty('--glow', base * rand(1.4, 1.8));
+    ember.addEventListener('animationend', () => {
+      ember.remove();
+      ambient.remove();
+      if (this.#running) then();
+    });
+
+    this.#stage.append(ambient, ember);
+  }
+
+  // Build and launch one wisp: a main ribbon + 2–3 satellite clouds, grouped.
+  #launchWisp(jit) {
     if (!this.#running) return;
     const puff = document.createElement('div');
     puff.className = 'puff';
@@ -228,8 +328,8 @@ class SmokeDrift extends HTMLElement {
     const grow = rand(4.5, 6.5);
     const peak = Math.max(0, Math.min(1, this.opacity)) * rand(0.7, 1);
 
-    puff.style.setProperty('--jit', `${rand(-this.spread, this.spread) * window.innerWidth}px`);
-    puff.style.setProperty('--y0', `${rand(-16, -6)}vh`);
+    puff.style.setProperty('--jit', `${jit}px`);
+    puff.style.setProperty('--y0', `${rand(-40, -26)}vh`);
     puff.style.setProperty('--w', `${w}px`);
     puff.style.setProperty('--h', `${h}px`);
     puff.style.setProperty('--life', `${life}s`);
