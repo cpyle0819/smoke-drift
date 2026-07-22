@@ -132,7 +132,7 @@ const FILTER_SVG = `
   <svg width="0" height="0" aria-hidden="true" style="position:absolute">
     <defs>
       <filter id="puffTex" x="-120%" y="-120%" width="340%" height="340%">
-        <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="b"/>
+        <feGaussianBlur in="SourceGraphic" stdDeviation="6.5" result="b"/>
         <feTurbulence type="fractalNoise" baseFrequency="0.010 0.020" numOctaves="2" seed="7" result="n"/>
         <feDisplacementMap in="b" in2="n" scale="74" xChannelSelector="R" yChannelSelector="G"/>
       </filter>
