@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>&lt;smoke-drift&gt; demo</title>
+  <style>
+    html, body { height: 100%; margin: 0; }
+    body {
+      background: radial-gradient(1200px 700px at 70% -10%, #241a10, #0d0906);
+      color: #e8dec4; font-family: Georgia, serif;
+      display: grid; place-items: center; min-height: 100vh;
+    }
+    .card {
+      position: relative; z-index: 1;
+      background: rgba(20,14,7,.5); border: 1px solid #7a5f30; border-radius: 4px;
+      padding: 34px 42px; max-width: 520px; backdrop-filter: blur(1px);
+    }
+    h1 { font-size: 28px; margin: 0 0 10px; }
+    code { background: rgba(232,222,196,.12); padding: 1px 6px; border-radius: 3px; }
+    .controls { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
+    button { font: inherit; cursor: pointer; background: #b08d4f; border: 0; padding: 7px 14px; border-radius: 3px; }
+  </style>
+  <script type="module" src="./smoke-drift.js"></script>
+</head>
+<body>
+  <!-- default: fixed, full-viewport, behind everything -->
+  <smoke-drift id="smoke" color="rgb(232 222 196)" opacity="0.5" wind="300"></smoke-drift>
+
+  <div class="card">
+    <h1>&lt;smoke-drift&gt;</h1>
+    <p>A drifting pipe-smoke background as a Web Component. This whole page has one
+      tag: <code>&lt;smoke-drift&gt;</code>. Everything else is encapsulated in its
+      shadow root.</p>
+    <p>Try it in the console: <code>smoke.wind = -300</code>,
+      <code>smoke.color = '#9fd1ff'</code>, <code>smoke.paused = true</code>.</p>
+    <div class="controls">
+      <button onclick="smoke.paused = !smoke.paused">pause / resume</button>
+      <button onclick="smoke.color = '#9fd1ff'">blue smoke</button>
+      <button onclick="smoke.wind = -smoke.wind">reverse wind</button>
+      <button onclick="smoke.setAttribute('gap-min','0'); smoke.setAttribute('gap-max','2')">more smoke</button>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,43 @@
+{
+  "name": "smoke-drift",
+  "version": "1.0.0",
+  "description": "A drifting pipe-smoke background as a zero-dependency Web Component.",
+  "type": "module",
+  "main": "smoke-drift.js",
+  "module": "smoke-drift.js",
+  "exports": {
+    ".": "./smoke-drift.js"
+  },
+  "files": [
+    "smoke-drift.js",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "demo": "python3 -m http.server 8080"
+  },
+  "keywords": [
+    "web-component",
+    "custom-element",
+    "shadow-dom",
+    "smoke",
+    "animation",
+    "background",
+    "svg",
+    "css",
+    "zero-dependency"
+  ],
+  "author": "Corey Pyle",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cpyle0819/smoke-drift.git"
+  },
+  "homepage": "https://github.com/cpyle0819/smoke-drift#readme",
+  "bugs": {
+    "url": "https://github.com/cpyle0819/smoke-drift/issues"
+  },
+  "sideEffects": [
+    "./smoke-drift.js"
+  ]
+}
